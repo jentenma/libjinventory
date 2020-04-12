@@ -25,6 +25,17 @@
  * Comment out to not show virtual interfaces. Be aware that bond interfaces
  * are considered virtual.
  */
+
+struct libjinventory_loggers {
+	void (*debug)(char *,...);       
+	void (*info)(char *,...);
+	void (*warn)(char *,...);       
+	void (*error)(char *,...);
+	void (*critical)(char *,...);       
+};
+
+extern struct libjinventory_loggers *lji_logger_ptr;
+
 #define NET_SHOW_VIRTUAL_INTERFACES
 
 struct jinventory_dpdr_info {

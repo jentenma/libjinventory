@@ -123,7 +123,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libjinventory_la_LIBADD =
-am_libjinventory_la_OBJECTS = jinventory.lo jinventory_scsi_host.lo
+am_libjinventory_la_OBJECTS = jinventory.lo jinventory_scsi_host.lo \
+	logger.lo
 libjinventory_la_OBJECTS = $(am_libjinventory_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -319,7 +320,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libjinventory.la
 pkginclude_HEADERS = libjinventory.h
-libjinventory_la_SOURCES = jinventory.c jinventory_scsi_host.c
+libjinventory_la_SOURCES = jinventory.c jinventory_scsi_host.c logger.c
 libjinventory_la_LDFLAGS = -version-info 0:0:0
 AM_LDFLAGS = -ludev -ljson-c
 all: all-am
@@ -403,6 +404,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jinventory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jinventory_scsi_host.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
