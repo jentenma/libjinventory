@@ -51,7 +51,7 @@ static struct libjinventory_loggers lji_logger = {
 	.error = (void (*)(char *,...))libjinventory_error,
 	.critical = (void (*)(char *,...))libjinventory_critical
 };
-;
+
 struct libjinventory_loggers *lji_logger_ptr =&lji_logger;
 
 struct libjinventory_loggers *libjinventory_init_loggers(struct libjinventory_loggers *logger_ptr)
@@ -141,4 +141,16 @@ static void libjinventory_critical(char *format, ...)
 	vsnprintf(buf+len, 256-len, format, ap);
 	printf("%s",buf);
 	return;
+}
+
+void libjinventory_logging_test(struct libjinventory_loggers *ljip)
+{
+	if (ljip != NULL)
+		libjinventory_init_loggers(ljip);
+
+	lji_logger_ptr->debug("This is a debug message\n");
+	lji_logger_ptr->info("This is a info message\n");
+	lji_logger_ptr->warn("This is a warn message\n");
+	lji_logger_ptr->error("This is a error message\n");
+	lji_logger_ptr->critical("This is a critical message\n");
 }

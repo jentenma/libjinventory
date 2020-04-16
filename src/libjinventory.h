@@ -94,4 +94,7 @@ char *jinventory_net_interfaces_get_json_str(void);
 char *jinventory_disk_property_get( unsigned int flags, char *inproperty, char *indevname );
 char *jinventory_disk_sysattr_get( unsigned int flags, char *insysattr, char *indevname );
 
+void libjinventory_logging_test(struct libjinventory_loggers *ljip);
+struct libjinventory_loggers *libjinventory_init_loggers(struct libjinventory_loggers *logger_ptr);
+
 #endif /* __JINVENTORY_COMMON_H__ */
