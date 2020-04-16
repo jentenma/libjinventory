@@ -305,7 +305,7 @@ int jinventory_drive_info( unsigned int flags, char **json_str, void **jobj )
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 	
@@ -487,7 +487,7 @@ char *jinventory_disk_property_get( unsigned int flags, char *inproperty, char *
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 	
@@ -562,7 +562,7 @@ char *jinventory_disk_sysattr_get( unsigned int flags, char *insysattr, char *in
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 	
@@ -648,7 +648,7 @@ int jinventory_cpu_info( unsigned int flags, char **json_str, void **jobj )
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 	
@@ -843,7 +843,7 @@ int jinventory_net_info( unsigned int flags, char **json_str, void **jobj )
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 
@@ -851,7 +851,7 @@ int jinventory_net_info( unsigned int flags, char **json_str, void **jobj )
 	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 	if (sock < 0) {
 		perror("socket");
-		printf("Opening socket failed");
+		lji_logger_ptr->error("Opening socket failed");
 		return 0;
 	}
 	
@@ -1105,7 +1105,7 @@ static int jinventory_netstat_info( unsigned int flags, char **json_str, char *i
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 
@@ -1113,7 +1113,7 @@ static int jinventory_netstat_info( unsigned int flags, char **json_str, char *i
 	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 	if (sock < 0) {
 		perror("socket");
-		printf("Opening socket failed");
+		lji_logger_ptr->error("Opening socket failed");
 		return 0;
 	}
 	
@@ -1285,7 +1285,7 @@ static int jinventory_net_interfaces( unsigned int flags, char **json_str, void 
 	/* Create the udev object */
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
+		lji_logger_ptr->error("Can't create udev\n");
 		return(0);
 	}
 
@@ -1293,7 +1293,7 @@ static int jinventory_net_interfaces( unsigned int flags, char **json_str, void 
 	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 	if (sock < 0) {
 		perror("socket");
-		printf("Opening socket failed");
+		lji_logger_ptr->error("Opening socket failed");
 		return 0;
 	}
 	
