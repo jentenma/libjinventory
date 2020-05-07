@@ -971,7 +971,7 @@ int jinventory_net_info( unsigned int flags, char **json_str, void **jobj )
 				if ((strcmp(".",dp->d_name)==0) || (strcmp("..",dp->d_name)==0))
 					continue;
 				sprintf(cfpath,"statistics/%s", dp->d_name);
-				if ( /*verbose_debug*/1 )
+				if ( verbose_debug )
 					printf("cfpath = %s\n", cfpath);
 
 				value = udev_device_get_sysattr_value(dev,cfpath);
