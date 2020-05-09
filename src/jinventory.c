@@ -383,7 +383,8 @@ int jinventory_drive_info( unsigned int flags, char **json_str, void **jobj )
 				if (strcmp(property, "/dev/nvme0n1") == 0 ){
 					property = udev_device_get_property_value(dev, "ID_SERIAL_SHORT");
 					value = udev_device_get_sysattr_value(dev, "size");
-					printf (" *** ID_SERIAL_SHORT = %s size = %s\n", property,value);
+					if ( verbose_debug )
+						printf (" *** ID_SERIAL_SHORT = %s size = %s\n", property,value);
 				}
 
 				udev_list_entry_foreach(list_entry, udev_device_get_properties_list_entry(dev)) {
