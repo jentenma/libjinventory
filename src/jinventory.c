@@ -56,9 +56,12 @@ static void print_sysattr(struct udev_device *device);
 static json_object *jinventory_drives_get_json_object( void );
 static json_object *jinventory_cpus_get_json_object( void );
 static json_object *jinventory_nets_get_json_object( void );
+static json_object *jinventory_fpga_get_json_object( void );
+
 static int jinventory_get_eth_drvinfo( int sock, char *if_name, struct ethtool_drvinfo *drvinfo);
 static int jinventory_netstat_info( unsigned int flags, char **json_str, char *iface, void **jobj );
 static int jinventory_net_interfaces( unsigned int flags, char **json_str, void **jobj );
+
 
 static int is_ascii(const signed char *c, size_t len);
 static int verbose_debug = 0;
@@ -180,6 +183,24 @@ char *jinventory_cpus_get_json_str( void )
 {
 	char *json_str = NULL;
 	jinventory_cpu_info(0, &json_str, (void **)NULL);
+	return json_str;
+}
+
+/* FPGA */
+int jinventory_fpga_show_json( void )
+{
+	char *json_str = NULL;
+	int num_fpgas = 0;
+	num_fpgas = jinventory_fpga_info(PFSD_INV_FLAG_VERBOSE, (char **)NULL, (void **)NULL, "/sys/nisoc/fpga","nisoc"); 
+	if (json_str)
+		free(json_str);
+	return num_fpgas;
+}
+
+char *jinventory_fpga_get_json_str( void )
+{
+	char *json_str = NULL;
+	jinventory_fpga_info(0, &json_str, (void **)NULL, "/sys/nisoc/fpga","nisoc");
 	return json_str;
 }
 
@@ -1382,6 +1403,177 @@ static int jinventory_net_interfaces( unsigned int flags, char **json_str, void 
 
 }
 
+int jinventory_fpga_info( unsigned int flags, char **json_str, void **jobj, char *basesyspath, char *sysname )
+{
+	int num_fpgas;
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry, *list_entry;
+	struct udev_device *dev;
+	json_object *fpga_object;
+	json_object *info_object;
+	json_object *fpga_list_object;
+	char dstr[64];
+	int verbose = flags & PFSD_INV_FLAG_VERBOSE;
+	const char *jstr = NULL;
+
+	/* Create the udev object */
+	udev = udev_new();
+	if (!udev) {
+		lji_logger_ptr->error("Can't create udev\n");
+		return(0);
+	}
+
+	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_syspath(enumerate, "/sys/nisoc/fpga");
+	udev_enumerate_add_match_sysname(enumerate, "nisoc");
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+	
+	num_fpgas = 0;
+
+	fpga_list_object = json_object_new_object();
+
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path;
+		const char *property;
+		const char *value;
+		char  cfpath[256];
+		char  tmppath[256];
+		DIR *dirp;
+		struct dirent *dp;
+		int sdidx;
+
+		struct inv_dir_list  *dl_head = NULL;
+		struct inv_dir_list  *dl_node = NULL;
+		struct inv_dir_list  *dl_next = NULL;
+
+		memset((void *)cfpath,0,256);
+
+		/* Get the filename of the /sys entry for the device
+		   and create a udev_device object (dev) representing it */
+		path = udev_list_entry_get_name(dev_list_entry);
+		if ( verbose_debug )
+			printf("path = %s\n", path);
+		dev = udev_device_new_from_syspath(udev, path);
+
+		/* new info object */
+		info_object = json_object_new_object();
+
+		/* Build the inventory directory list for this device */
+		init_inv_list ( &dl_head);
+		dl_head = find_subdirs(path, dl_head);
+#if 0
+		for (dl_node = dl_head; dl_node; dl_node = dl_node->next){
+			printf ("%s\n", dl_node->info->name);
+		}
+		print_inv_list(dl_head);
+#endif
+
+		/* 
+                 * This will get everything at this level
+		 */
+		udev_list_entry_foreach(list_entry, udev_device_get_properties_list_entry(dev)) {
+			property = udev_list_entry_get_name(list_entry);
+			value =    udev_list_entry_get_value(list_entry);
+			if ( verbose_debug )
+				printf("property: %s=%s\n", property, value); 
+			if ( value != NULL )
+				json_object_object_add(info_object, property, json_object_new_string(value));
+		}
+
+		udev_list_entry_foreach(list_entry, udev_device_get_sysattr_list_entry(dev)) {
+			property = udev_list_entry_get_name(list_entry);
+			value = udev_device_get_sysattr_value(dev, udev_list_entry_get_name(list_entry));
+			if ( verbose_debug )
+				printf("sysattr:  %s=%s\n", property, value);
+			if ( value != NULL )
+				json_object_object_add(info_object, property, json_object_new_string(value));
+		}
+
+		/*
+		 * This bit of code will get the values that are in subdirectories
+		 */
+		path = udev_list_entry_get_name(dev_list_entry);
+
+		for (dl_node = dl_head; dl_node; dl_node = dl_node->next){
+			sprintf(cfpath,"%s", dl_node->info->name);
+			if ( verbose_debug )
+				printf("cfpath = %s\n", cfpath);
+			dirp = opendir(cfpath);
+			while (dirp) {
+				if ((dp=readdir(dirp)) != NULL) {
+					if ((strcmp(".",dp->d_name)==0) || (strcmp("..",dp->d_name)==0))
+						continue;
+					if (dp->d_type == DT_DIR )
+						continue;
+					char *cptr;
+					memset(tmppath,0,256);
+					sprintf(tmppath,"%s/%s", cfpath,dp->d_name);
+					/* strip off the path */
+					cptr = (char *)tmppath+strlen(path);
+					value = udev_device_get_sysattr_value(dev,cptr);
+					if ( verbose_debug )
+						printf("%s=%s\n", cptr, value);
+					if ( value != NULL ){
+						json_object_object_add(info_object, cptr, json_object_new_string(value));
+					}
+					else {
+						value = udev_device_get_property_value(dev,cptr);
+						if ( value != NULL )
+							json_object_object_add(info_object, cptr, json_object_new_string(value));
+					}
+				}
+				else {
+					break;
+				}
+			}
+			closedir(dirp);
+		}
+		
+		/* Free up the inventory directory list */
+		free_inv_list(dl_head);
+
+		fpga_object = json_object_new_object();
+		json_object_object_add(fpga_object,"info", info_object);
+
+		sprintf(dstr,"fpga%d", num_fpgas);
+
+		if ( verbose_debug )
+			printf(" --  Adding %s\n", dstr);
+
+		json_object_object_add(fpga_list_object, dstr, fpga_object);
+
+		udev_device_unref(dev);
+
+		num_fpgas++;
+
+	}
+
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
+
+	if ( verbose ){
+		if ( verbose_debug )
+			printf (" ** Number of fpgas found = %d\n", num_fpgas);
+		printf("%s\n", json_object_to_json_string(fpga_list_object));
+	}
+
+	if (json_str != NULL) {
+		jstr = json_object_to_json_string(fpga_list_object);
+		*json_str = malloc(strlen(jstr)+32);
+		strcpy(*json_str, jstr);
+	}
+
+	if ( jobj != NULL )
+		*jobj = fpga_list_object;
+	else
+		json_object_put(fpga_list_object);
+
+	return num_fpgas;
+
+}
+
 /*
  Static functions
 */
@@ -1433,6 +1625,14 @@ static json_object *jinventory_nets_get_json_object( void )
 	char *json_str = NULL;
 	json_object *jobj;
 	jinventory_net_info(0, &json_str, (void **)&jobj);
+	return jobj;
+}
+
+static json_object *jinventory_fpga_get_json_object( void )
+{
+	char *json_str = NULL;
+	json_object *jobj;
+	jinventory_fpga_info(0, &json_str, (void **)&jobj,"/sys/nisoc/fpga", "nisoc");
 	return jobj;
 }
 

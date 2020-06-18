@@ -90,6 +90,10 @@ char *jinventory_inventory_get_json_str( void );
 char *jinventory_netstat_get_json_str( char *iface );
 char *jinventory_net_interfaces_get_json_str(void);
 
+int jinventory_fpga_info( unsigned int flags, char **json_str, void **jobj, char *basesyspath, char *sysname );
+char *jinventory_fpga_get_json_str( void );
+int jinventory_fpga_show_json( void );
+
 /* get specific properties or attributes for a device */
 char *jinventory_disk_property_get( unsigned int flags, char *inproperty, char *indevname );
 char *jinventory_disk_sysattr_get( unsigned int flags, char *insysattr, char *indevname );
