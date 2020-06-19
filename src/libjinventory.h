@@ -97,6 +97,8 @@ int jinventory_fpga_show_json( void );
 /* get specific properties or attributes for a device */
 char *jinventory_disk_property_get( unsigned int flags, char *inproperty, char *indevname );
 char *jinventory_disk_sysattr_get( unsigned int flags, char *insysattr, char *indevname );
+char *jinventory_fpga_property_get( unsigned int flags, char *inproperty, char *indevname, char *insyspath );
+char *jinventory_fpga_sysattr_get( unsigned int flags, char *insysattr, char *indevname, char *insyspath );
 
 void libjinventory_logging_test(struct libjinventory_loggers *ljip);
 struct libjinventory_loggers *libjinventory_init_loggers(struct libjinventory_loggers *logger_ptr);

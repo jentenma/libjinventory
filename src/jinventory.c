@@ -1403,6 +1403,20 @@ static int jinventory_net_interfaces( unsigned int flags, char **json_str, void 
 
 }
 
+/*************************************************************************
+ * 
+ * Function: jinventory_fpga_info
+ *
+ * Description:
+ *
+ * inputs:
+ *
+ * returns: int
+ *
+ * side effects:
+ *
+ ************************************************************************/
+
 int jinventory_fpga_info( unsigned int flags, char **json_str, void **jobj, char *basesyspath, char *sysname )
 {
 	int num_fpgas;
@@ -1573,6 +1587,153 @@ int jinventory_fpga_info( unsigned int flags, char **json_str, void **jobj, char
 	return num_fpgas;
 
 }
+
+/*
+ * **********************************************************************
+ *
+ * Function: char *jinventory_fpga_property_get
+ *
+ * Description:
+ *
+ * inputs: 
+ *
+ * returns:
+ *
+ * side effects:
+ *
+ * *********************************************************************
+ */
+char *jinventory_fpga_property_get( unsigned int flags, char *inproperty, char *indevname, char *insyspath )
+{
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry, *list_entry;
+	struct udev_device *dev;
+	int verbose = flags & PFSD_INV_FLAG_VERBOSE;
+	char *rtnpval = NULL;
+	
+	/* Create the udev object */
+	udev = udev_new();
+	if (!udev) {
+		lji_logger_ptr->error("Can't create udev\n");
+		return(0);
+	}
+	
+	enumerate = udev_enumerate_new(udev);
+#if 0
+	udev_enumerate_add_syspath(enumerate, "/sys/nisoc/fpga");
+	udev_enumerate_add_match_sysname(enumerate, "nisoc");
+#endif
+	udev_enumerate_add_syspath(enumerate, insyspath);
+	udev_enumerate_add_match_sysname(enumerate, indevname);
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path;
+		const char *property;
+		const char *value;
+		const char *id_bus;
+		char  cfpath[256];
+
+		/* Get the filename of the /sys entry for the device
+		   and create a udev_device object (dev) representing it */
+		path = udev_list_entry_get_name(dev_list_entry);
+		if (verbose_debug)
+			printf("path = %s\n", path);
+		dev = udev_device_new_from_syspath(udev, path);
+
+		property = udev_device_get_property_value(dev, inproperty);
+		if (property != NULL ){
+			rtnpval = malloc(strlen(property)+1);
+			strcpy(rtnpval, property);
+			udev_device_unref(dev);
+			break;
+		}
+		udev_device_unref(dev);
+	}
+
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
+
+	return rtnpval;
+}
+
+/*
+ * **********************************************************************
+ *
+ * Function: char *jinventory_fpga_sysattr_get
+ *
+ * Description:
+ *
+ * inputs: 
+ *
+ * returns:
+ *
+ * side effects:
+ *
+ * *********************************************************************
+ */
+char *jinventory_fpga_sysattr_get( unsigned int flags, char *insysattr, char *indevname, char *insyspath )
+{
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry, *list_entry;
+	struct udev_device *dev;
+	int verbose = flags & PFSD_INV_FLAG_VERBOSE;
+	char *rtnpval = NULL;
+	
+	/* Create the udev object */
+	udev = udev_new();
+	if (!udev) {
+		lji_logger_ptr->error("Can't create udev\n");
+		return(0);
+	}
+	
+
+	enumerate = udev_enumerate_new(udev);
+#if 0
+	udev_enumerate_add_syspath(enumerate, "/sys/nisoc/fpga");
+	udev_enumerate_add_match_sysname(enumerate, "nisoc");
+#endif
+
+	udev_enumerate_add_syspath(enumerate, insyspath);
+	udev_enumerate_add_match_sysname(enumerate, indevname);
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path;
+		const char *sysattr;
+		const char *property;
+		const char *value;
+		const char *id_bus;
+		char  cfpath[256];
+
+		/* Get the filename of the /sys entry for the device
+		   and create a udev_device object (dev) representing it */
+		path = udev_list_entry_get_name(dev_list_entry);
+		if (verbose_debug)
+			printf("path = %s\n", path);
+		dev = udev_device_new_from_syspath(udev, path);
+
+		sysattr = udev_device_get_sysattr_value(dev, insysattr);
+		if (sysattr != NULL ){
+			rtnpval = malloc(strlen(sysattr)+1);
+			strcpy(rtnpval, sysattr);
+			udev_device_unref(dev);
+			break;
+		}
+
+		udev_device_unref(dev);
+	}
+
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
+
+	return rtnpval;
+}
+
 
 /*
  Static functions
