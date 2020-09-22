@@ -86,6 +86,12 @@ char *jinventory_scsi_hosts_get_json_str( void );
 int jinventory_scsi_host_info( unsigned int flags, char **json_str, void **jobj );
 void *jinventory_scsi_hosts_get_json_object( void );
 
+int jinventory_num_fc_hosts( void );
+int jinventory_fc_hosts_show_json( void );
+char *jinventory_fc_hosts_get_json_str( void );
+int jinventory_fc_host_info( unsigned int flags, char **json_str, void **jobj );
+void *jinventory_fc_hosts_get_json_object( void );
+
 char *jinventory_inventory_get_json_str( void );
 char *jinventory_netstat_get_json_str( char *iface );
 char *jinventory_net_interfaces_get_json_str(void);
