@@ -25,7 +25,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/dpump.h>
 /* #include <sys/libpfsd.h> */
 #include <pthread.h>
 #include <sched.h>
